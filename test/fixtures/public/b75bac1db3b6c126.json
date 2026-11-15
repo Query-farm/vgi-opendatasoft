@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records?limit=9&select=%60country_code%60%2C%60modification_date%60%2C%60admin3_code%60%2C%60name%60&where=%28%60country_code%60+%3D+%22MC%22%29+and+%28%60modification_date%60+%3E%3D+date%272020-01-01%27%29+and+%28%60admin3_code%60+is+null%29",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 9, \"results\": [{\"country_code\": \"MC\", \"modification_date\": \"2025-10-01\", \"admin3_code\": null, \"name\": \"La Rousse\"}, {\"country_code\": \"MC\", \"modification_date\": \"2025-12-13\", \"admin3_code\": null, \"name\": \"Monaco\"}, {\"country_code\": \"MC\", \"modification_date\": \"2025-10-01\", \"admin3_code\": null, \"name\": \"Jardin Exotique\"}, {\"country_code\": \"MC\", \"modification_date\": \"2025-10-01\", \"admin3_code\": null, \"name\": \"Larvotto\"}, {\"country_code\": \"MC\", \"modification_date\": \"2026-09-05\", \"admin3_code\": null, \"name\": \"Saint-Roman\"}, {\"country_code\": \"MC\", \"modification_date\": \"2026-09-05\", \"admin3_code\": null, \"name\": \"Mareterra\"}, {\"country_code\": \"MC\", \"modification_date\": \"2024-07-15\", \"admin3_code\": null, \"name\": \"Monte-Carlo\"}, {\"country_code\": \"MC\", \"modification_date\": \"2026-09-05\", \"admin3_code\": null, \"name\": \"Les R\\u00e9voires\"}, {\"country_code\": \"MC\", \"modification_date\": \"2025-10-01\", \"admin3_code\": null, \"name\": \"Monaco-Ville\"}]}"
+}

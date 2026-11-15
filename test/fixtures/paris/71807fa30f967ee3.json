@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/arrondissements/records?limit=3&select=%60c_ar%60%2C%60l_aroff%60%2C%60surface%60&where=%60c_ar%60+%3C%3D+3",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 3, \"results\": [{\"c_ar\": 2, \"l_aroff\": \"Bourse\", \"surface\": 991153.74474596}, {\"c_ar\": 1, \"l_aroff\": \"Louvre\", \"surface\": 1824612.86048666}, {\"c_ar\": 3, \"l_aroff\": \"Temple\", \"surface\": 1170882.82818778}]}"
+}

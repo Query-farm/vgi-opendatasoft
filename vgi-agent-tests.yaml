@@ -1,0 +1,31 @@
+# Private graders for the public vgi.agent_test_tasks in the worker's catalog metadata.
+# `vgi-lint lint --ai` runs an agent on each prompt and grades it with check_sql.
+# See https://github.com/Query-farm/vgi-lint-check (VGI920).
+# All tasks read live portals (opendata.paris.fr), so they grade with check_sql.
+tasks:
+  - name: paris_arrondissement_count
+    check_sql: >-
+      SELECT count(*) = 20 FROM opendatasoft.main.records('opendata.paris.fr', 'arrondissements')
+  - name: largest_arrondissement
+    check_sql: >-
+      SELECT l_aroff = 'Passy' FROM opendatasoft.main.records('opendata.paris.fr', 'arrondissements')
+      ORDER BY surface DESC LIMIT 1
+  - name: paris_theme_counts
+    check_sql: >-
+      SELECT count(*) > 3 AND min(count) > 0
+      FROM opendatasoft.main.facets('opendata.paris.fr', facet := 'theme')
+  - name: airparif_datasets
+    check_sql: >-
+      SELECT count(*) >= 1 AND bool_and(publisher = 'Airparif')
+      FROM opendatasoft.main.datasets('opendata.paris.fr') WHERE publisher = 'Airparif'
+  - name: arrondissement_field_types
+    check_sql: >-
+      SELECT ods_type = 'geo_shape' FROM opendatasoft.main.fields('opendata.paris.fr', 'arrondissements')
+      WHERE name = 'geom'
+  - name: most_cities_country
+    check_sql: >-
+      SELECT country = 'United States' FROM opendatasoft.main.odsql('public.opendatasoft.com',
+        'geonames-all-cities-with-a-population-1000', 'cou_name_en AS country, count(*) AS n',
+        group_by := 'cou_name_en', order_by := 'n DESC', max_rows := 1)
+  - name: quote_literal
+    reference_sql: SELECT opendatasoft.main.odsql_quote('O''Brien "Jr"') AS literal

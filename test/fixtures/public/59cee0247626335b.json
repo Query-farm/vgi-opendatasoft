@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records?group_by=cou_name_en&limit=3&order_by=population+DESC&select=cou_name_en+AS+country%2C+count%28%2A%29+AS+cities%2C+sum%28population%29+AS+population",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 3, \"results\": [{\"cou_name_en\": \"China\", \"country\": \"China\", \"cities\": 4971, \"population\": 882771123}, {\"cou_name_en\": \"India\", \"country\": \"India\", \"cities\": 7229, \"population\": 394640665}, {\"cou_name_en\": \"United States\", \"country\": \"United States\", \"cities\": 17344, \"population\": 275670990}]}"
+}

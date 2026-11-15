@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/arrondissements/records?limit=3&order_by=%60surface%60+desc&select=%60c_ar%60%2C%60surface%60&where=%60surface%60+is+not+null",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 20, \"results\": [{\"c_ar\": 16, \"surface\": 16372542.1289739}, {\"c_ar\": 12, \"surface\": 16314782.6372674}, {\"c_ar\": 15, \"surface\": 8494994.08101075}]}"
+}

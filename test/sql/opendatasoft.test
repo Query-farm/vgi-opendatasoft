@@ -1,0 +1,246 @@
+# name: test/sql/opendatasoft.test
+# description: SQL tests for the opendatasoft worker against recorded Opendatasoft responses
+# group: [opendatasoft]
+#
+# OPENDATASOFT_MOCK_API is test/mock_api/server.py: a strict replay server. Every
+# request must match a recorded one exactly (path + ODSQL select/where/order_by/
+# limit/offset/refine), otherwise it answers 404 and the query fails. So each
+# query below also asserts what was pushed down to the portal. Portals:
+#   /paris   -> opendata.paris.fr     /public -> public.opendatasoft.com
+#   /hub     -> data.opendatasoft.com /private -> hand-made, needs an API key
+# Exports were recorded truncated to 40 rows.
+
+require vgi
+
+require-env OPENDATASOFT_WORKER
+
+require-env OPENDATASOFT_MOCK_API
+
+# JSON columns (geo_shape, json_blob) need the json extension (autoloaded in a normal DuckDB).
+statement ok
+LOAD json;
+
+statement ok
+ATTACH 'opendatasoft' (TYPE vgi, LOCATION '{OPENDATASOFT_WORKER}');
+
+# ---------------------------------------------------------------- records: types + pushdown
+
+# select=`c_ar`,`l_aroff`,`surface`  where=`c_ar` <= 3
+query ITITT
+SELECT c_ar, l_aroff, round(surface)::BIGINT AS surface, typeof(geom_x_y), typeof(geom)
+FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements') WHERE c_ar <= 3 ORDER BY c_ar;
+----
+1	Louvre	1824613	STRUCT(lon DOUBLE, lat DOUBLE)	JSON
+2	Bourse	991154	STRUCT(lon DOUBLE, lat DOUBLE)	JSON
+3	Temple	1170883	STRUCT(lon DOUBLE, lat DOUBLE)	JSON
+
+# LIKE 'p%' -> startswith(`l_aroff`, "Lou")
+query T
+SELECT l_aroff FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements') WHERE l_aroff LIKE 'Lou%';
+----
+Louvre
+
+# IN with a literal that needs ODSQL escaping: "O'Brien \"x\""
+query T
+SELECT l_aroff FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements')
+WHERE l_aroff IN ('Temple', 'Louvre', 'O''Brien "x"') ORDER BY 1;
+----
+Louvre
+Temple
+
+# ORDER BY <double> LIMIT 3 -> order_by=`surface` desc, limit=3, `surface` is not null
+query I
+SELECT c_ar FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements') ORDER BY surface DESC LIMIT 3;
+----
+16
+12
+15
+
+# geo_shape -> GeoJSON geometry (JSON); geo_point_2d -> STRUCT(lon, lat)
+query TR
+SELECT json_extract_string(geom, '$.type'), round(geom_x_y.lat, 3)
+FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements') WHERE c_ar = 4;
+----
+Polygon	48.854
+
+query I
+SELECT count(*) FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements') WHERE c_ar > 10;
+----
+10
+
+# A filter plus ORDER BY ... LIMIT: the portal sorts (order_by=`population` desc) and the scan
+# stops after two pages, once DuckDB's Top-N filter rules out the rest. A third page
+# request would be unrecorded and fail the query.
+query TI
+SELECT name, population FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/public', 'geonames-all-cities-with-a-population-1000')
+WHERE country_code = 'FR' ORDER BY population DESC LIMIT 3;
+----
+Paris	2138551
+Marseille	877215
+Lyon	520774
+
+# Text equality, DATE literal (date'2020-01-01') and IS NULL, all in one ODSQL where.
+query TTT
+SELECT name, modification_date, typeof(modification_date)
+FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/public', 'geonames-all-cities-with-a-population-1000')
+WHERE country_code = 'MC' AND modification_date >= DATE '2020-01-01' AND admin3_code IS NULL ORDER BY name;
+----
+Jardin Exotique	2025-10-01	DATE
+La Rousse	2025-10-01	DATE
+Larvotto	2025-10-01	DATE
+Les Révoires	2026-09-05	DATE
+Mareterra	2026-09-05	DATE
+Monaco	2025-12-13	DATE
+Monaco-Ville	2025-10-01	DATE
+Monte-Carlo	2024-07-15	DATE
+Saint-Roman	2026-09-05	DATE
+
+# 171,818 rows > the records API's 10,000 cap -> streamed from exports/jsonl
+# (the recorded export is truncated to 40 rows).
+query IT
+SELECT count(*), count(DISTINCT name) > 1
+FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/public', 'geonames-all-cities-with-a-population-1000');
+----
+40	true
+
+# file fields -> STRUCT(id, filename, format, url, width, height, thumbnail, color_summary)
+query TTITT
+SELECT specification.filename, specification.format, image.width, image.thumbnail, len(image.color_summary) > 0
+FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'algorithmes-de-la-ville-de-paris-copie')
+WHERE specification IS NOT NULL ORDER BY 1 LIMIT 2;
+----
+c34_algorithme_specifications.pdf	pdf	1108	true	true
+cotation_de_la_demande_de_logement.pdf	pdf	1200	true	true
+
+# datetime -> TIMESTAMPTZ; the filter becomes date'2026-11-14T00:00:00+00:00'
+query ITT
+SELECT count(*), typeof(min(updated_at)), min(updated_at) >= TIMESTAMPTZ '2026-11-14 00:00:00+00'
+FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'que-faire-a-paris-')
+WHERE updated_at >= TIMESTAMPTZ '2026-11-14 00:00:00+00';
+----
+12	TIMESTAMP WITH TIME ZONE	true
+
+statement error
+SELECT * FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/paris', 'no-such-dataset');
+----
+<REGEX>:.*HTTP 404.*
+
+statement error
+SELECT * FROM opendatasoft.main.records('ftp://example.com', 'x');
+----
+<REGEX>:.*
+
+# ---------------------------------------------------------------- fields / facets
+
+query TTTT
+SELECT name, ods_type, duckdb_type, is_facet FROM opendatasoft.main.fields('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements') ORDER BY position;
+----
+n_sq_ar	int	BIGINT	false
+c_ar	int	BIGINT	true
+c_arinsee	int	BIGINT	true
+l_ar	text	VARCHAR	true
+l_aroff	text	VARCHAR	false
+n_sq_co	int	BIGINT	false
+surface	double	DOUBLE	false
+perimetre	double	DOUBLE	false
+geom_x_y	geo_point_2d	STRUCT(lon DOUBLE, lat DOUBLE)	false
+geom	geo_shape	JSON	false
+
+# multivalued text -> VARCHAR[]
+query TT
+SELECT duckdb_type, multivalued_separator FROM opendatasoft.main.fields('{OPENDATASOFT_MOCK_API}/public', 'geonames-all-cities-with-a-population-1000')
+WHERE name = 'alternate_names';
+----
+VARCHAR[]	,
+
+query TTI
+SELECT facet, value, count FROM opendatasoft.main.facets('{OPENDATASOFT_MOCK_API}/paris', facet := 'theme') ORDER BY count DESC, value LIMIT 3;
+----
+theme	Mobilité et Espace Public	100
+theme	Urbanisme et Logements	97
+theme	Citoyenneté	91
+
+query TI
+SELECT value, count FROM opendatasoft.main.facets('{OPENDATASOFT_MOCK_API}/paris', dataset_id := 'arrondissements', facet := 'c_ar')
+WHERE value IN ('1', '20') ORDER BY value;
+----
+1	1
+20	1
+
+# ---------------------------------------------------------------- odsql (server-side)
+
+query TII
+SELECT country, cities, population FROM opendatasoft.main.odsql('{OPENDATASOFT_MOCK_API}/public', 'geonames-all-cities-with-a-population-1000',
+  'cou_name_en AS country, count(*) AS cities, sum(population) AS population',
+  group_by := 'cou_name_en', order_by := 'population DESC', max_rows := 3);
+----
+China	4971	882771123
+India	7229	394640665
+United States	17344	275670990
+
+query IR
+SELECT n, round(km2, 1) FROM opendatasoft.main.odsql('{OPENDATASOFT_MOCK_API}/paris', 'arrondissements', 'count(*) AS n, sum(surface) / 1000000 AS km2');
+----
+20	105.4
+
+# ---------------------------------------------------------------- datasets (catalog)
+
+# refine=theme:Environnement  where=(`records_count` >= 10) and (`records_count` <= 12)
+query TI
+SELECT dataset_id, records_count FROM opendatasoft.main.datasets('{OPENDATASOFT_MOCK_API}/paris', theme := 'Environnement')
+WHERE records_count BETWEEN 10 AND 12 ORDER BY dataset_id;
+----
+eau-evolution-des-prelevements-en-eau-pour-les-besoins-du-territoire-parisien	10
+energies-energie-totale-consommee-a-paris	10
+qualite-de-l-air-concentration-moyenne-no2-pm2-5-pm10	11
+qualite-de-l-air-exposition-des-parisen-ne-s-au-no2-et-pm2-5	10
+qualite-de-lair-concentration-moyenne-no2-pm25-pm10-o3-a-partir-de-2015	11
+
+query TTTTT
+SELECT dataset_id, publisher, themes, typeof(modified), url LIKE '%/explore/dataset/%'
+FROM opendatasoft.main.datasets('{OPENDATASOFT_MOCK_API}/paris') WHERE publisher = 'Airparif';
+----
+respirons-mieux-dans-le-20eme-donnees-mini-stations	Airparif	[Environnement]	TIMESTAMP WITH TIME ZONE	true
+
+query TT
+SELECT dataset_id, title FROM opendatasoft.main.datasets('{OPENDATASOFT_MOCK_API}/paris', q := 'arrondissements') WHERE dataset_id = 'arrondissements';
+----
+arrondissements	Arrondissements
+
+# data.opendatasoft.com lists ~100,000 datasets -> streamed from catalog/exports/json (truncated to 40)
+query IT
+SELECT count(*), count(DISTINCT dataset_id) = count(*) FROM opendatasoft.main.datasets('{OPENDATASOFT_MOCK_API}/hub');
+----
+40	true
+
+# ---------------------------------------------------------------- private datasets: scoped API keys
+
+statement error
+SELECT * FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/private', 'budget-2026');
+----
+<REGEX>:.*HTTP 401.*
+
+# A key scoped to another portal is never sent here.
+statement ok
+CREATE SECRET ods_other (TYPE opendatasoft, APIKEY 'wrong-key', SCOPE 'https://elsewhere.example.com');
+
+statement error
+SELECT * FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/private', 'budget-2026');
+----
+<REGEX>:.*HTTP 401.*
+
+statement ok
+CREATE SECRET ods_private (TYPE opendatasoft, APIKEY 'test-key', SCOPE '{OPENDATASOFT_MOCK_API}/private');
+
+query TRT
+SELECT poste, montant, vote_le FROM opendatasoft.main.records('{OPENDATASOFT_MOCK_API}/private', 'budget-2026') ORDER BY poste;
+----
+Parcs	NULL	NULL
+Voirie	1250000.5	2026-01-15
+Écoles	980000.0	2026-01-15
+
+# The key is redacted in duckdb_secrets().
+query T
+SELECT secret_string LIKE '%apikey=redacted%' FROM duckdb_secrets() WHERE name = 'ods_private';
+----
+true

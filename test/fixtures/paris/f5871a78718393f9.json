@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/arrondissements/records?limit=10&select=%60c_ar%60&where=%60c_ar%60+%3E+10",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 10, \"results\": [{\"c_ar\": 18}, {\"c_ar\": 11}, {\"c_ar\": 14}, {\"c_ar\": 20}, {\"c_ar\": 15}, {\"c_ar\": 17}, {\"c_ar\": 12}, {\"c_ar\": 16}, {\"c_ar\": 19}, {\"c_ar\": 13}]}"
+}

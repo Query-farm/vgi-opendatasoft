@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/que-faire-a-paris-/records?limit=12&select=%60updated_at%60&where=%60updated_at%60+%3E%3D+date%272026-11-14T00%3A00%3A00%2B00%3A00%27",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 12, \"results\": [{\"updated_at\": \"2026-11-14T11:49:31+00:00\"}, {\"updated_at\": \"2026-11-14T13:11:40+00:00\"}, {\"updated_at\": \"2026-11-14T11:40:01+00:00\"}, {\"updated_at\": \"2026-11-14T15:45:10+00:00\"}, {\"updated_at\": \"2026-11-14T10:50:34+00:00\"}, {\"updated_at\": \"2026-11-14T12:03:33+00:00\"}, {\"updated_at\": \"2026-11-14T12:48:36+00:00\"}, {\"updated_at\": \"2026-11-14T10:36:39+00:00\"}, {\"updated_at\": \"2026-11-14T17:04:22+00:00\"}, {\"updated_at\": \"2026-11-14T14:49:08+00:00\"}, {\"updated_at\": \"2026-11-14T12:18:28+00:00\"}, {\"updated_at\": \"2026-11-14T17:25:58+00:00\"}]}"
+}

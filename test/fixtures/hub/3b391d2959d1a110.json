@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets?limit=0",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 102965, \"results\": []}"
+}

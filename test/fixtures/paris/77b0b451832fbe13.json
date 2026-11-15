@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets?limit=1&select=publisher%2Cdataset_id%2Ctheme&where=%60publisher%60+%3D+%22Airparif%22",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 1, \"results\": [{\"publisher\": \"Airparif\", \"dataset_id\": \"respirons-mieux-dans-le-20eme-donnees-mini-stations\", \"theme\": [\"Environnement\"]}]}"
+}

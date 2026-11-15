@@ -1,0 +1,1 @@
+"""VGI opendatasoft worker package."""

@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/arrondissements/records?limit=0&where=%60c_ar%60+%3C%3D+3",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 3, \"results\": []}"
+}

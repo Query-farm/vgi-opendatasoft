@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/no-such-dataset",
+ "status": 404,
+ "content_type": "application/json",
+ "truncated": false,
+ "body": "{\n  \"error_code\": \"NotFoundResource\",\n  \"message\": \"The requested dataset no-such-dataset does not exist.\"\n}"
+}

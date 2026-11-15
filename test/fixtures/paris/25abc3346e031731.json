@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/arrondissements/records?limit=2&select=%60l_aroff%60&where=%60l_aroff%60+in+%28%22Temple%22%2C+%22Louvre%22%2C+%22O%27Brien+%5C%22x%5C%22%22%29",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 2, \"results\": [{\"l_aroff\": \"Temple\"}, {\"l_aroff\": \"Louvre\"}]}"
+}

@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/budget-2026/records?limit=3&select=%60poste%60%2C%60montant%60%2C%60vote_le%60",
+ "status": 200,
+ "content_type": "application/json",
+ "truncated": false,
+ "body": "{\"total_count\": 3, \"results\": [{\"poste\": \"Voirie\", \"montant\": 1250000.5, \"vote_le\": \"2026-01-15\"}, {\"poste\": \"Écoles\", \"montant\": 980000.0, \"vote_le\": \"2026-01-15\"}, {\"poste\": \"Parcs\", \"montant\": null, \"vote_le\": null}]}"
+}

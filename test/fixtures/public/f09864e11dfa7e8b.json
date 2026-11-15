@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records?limit=0&where=%60country_code%60+%3D+%22FR%22",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 8942, \"results\": []}"
+}

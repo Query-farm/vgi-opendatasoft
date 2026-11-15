@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets?limit=0&refine=theme%3AEnvironnement&where=%28%60records_count%60+%3E%3D+10%29+and+%28%60records_count%60+%3C%3D+12%29",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 5, \"results\": []}"
+}

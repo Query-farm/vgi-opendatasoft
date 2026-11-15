@@ -1,0 +1,7 @@
+{
+ "request": "/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records?limit=0&where=%28%60country_code%60+%3D+%22MC%22%29+and+%28%60modification_date%60+%3E%3D+date%272020-01-01%27%29+and+%28%60admin3_code%60+is+null%29",
+ "status": 200,
+ "content_type": "application/json; charset=utf-8",
+ "truncated": false,
+ "body": "{\"total_count\": 9, \"results\": []}"
+}
