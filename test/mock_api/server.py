@@ -75,7 +75,7 @@ def load(alias: str, key: str) -> dict[str, Any] | None:
     f = fixture_file(alias, key)
     if not f.exists():
         return None
-    data: dict[str, Any] = json.loads(f.read_text())
+    data: dict[str, Any] = json.loads(f.read_text(encoding="utf-8"))
     if data.get("request") != key:  # hash collision guard
         return None
     return data
@@ -126,7 +126,7 @@ def record(alias: str, key: str) -> dict[str, Any]:
     data = {"request": key, "status": status, "content_type": ctype, "truncated": truncated, "body": body}
     f = fixture_file(alias, key)
     f.parent.mkdir(parents=True, exist_ok=True)
-    f.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n")
+    f.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"recorded {alias}{key} -> {f.name}", file=sys.stderr)
     return data
 
@@ -178,7 +178,7 @@ class Handler(BaseHTTPRequestHandler):
         if data is None:
             print(f"mock: UNRECORDED {alias}{key}", file=sys.stderr)
             if MISS_LOG:
-                with open(MISS_LOG, "a") as log:
+                with open(MISS_LOG, "a", encoding="utf-8") as log:
                     log.write(f"{alias}{key}\n")
             msg = json.dumps({"error_code": "UnrecordedRequest", "message": f"no fixture for {alias}{key}"})
             self._send(404, msg)

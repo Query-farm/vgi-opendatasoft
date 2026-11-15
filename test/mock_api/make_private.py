@@ -49,7 +49,7 @@ def main() -> None:
         f.parent.mkdir(parents=True, exist_ok=True)
         data = {"request": key, "status": 200, "content_type": "application/json", "truncated": False}
         data["body"] = json.dumps(body, ensure_ascii=False)
-        f.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n")
+        f.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
         print(f.name, key)
 
 
