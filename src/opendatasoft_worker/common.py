@@ -320,7 +320,7 @@ def _past_topn_boundary(params: ProcessParams[Any], state: ScanState, spec: Scan
         op = getattr(f.op, "value", str(f.op))
         try:
             passes = _COMPARE[op](last, bound)
-        except (TypeError, KeyError):  # incomparable: never stop early on it
+        except TypeError, KeyError:  # incomparable: never stop early on it
             continue
         if not passes:
             log.debug("Top-N boundary passed on %s; stopping the scan early", state.order_col)

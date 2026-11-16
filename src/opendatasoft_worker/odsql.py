@@ -155,7 +155,7 @@ def _to_int(value: Any) -> int | None:
         return value
     try:
         f = float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     return int(f) if math.isfinite(f) and f == int(f) else None
 
@@ -165,7 +165,7 @@ def _to_float(value: Any) -> float | None:
         return None
     try:
         return float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
