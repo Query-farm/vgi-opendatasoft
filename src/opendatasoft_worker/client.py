@@ -14,6 +14,7 @@ so it cannot leak into logs or error messages.
 from __future__ import annotations
 
 import contextlib
+import gzip
 import json
 import logging
 import re
@@ -26,7 +27,7 @@ import uuid
 from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import IO, Any
+from typing import IO, Any, cast
 
 log = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ class OdsClient:
             request = urllib.request.Request(url, headers=self._headers())
             try:
                 response: IO[bytes] = urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS)
-                return response
+                return _decoded(response)
             except urllib.error.HTTPError as err:
                 retryable = err.code == 429 or err.code >= 500
                 if not retryable or attempt == MAX_ATTEMPTS:
@@ -165,6 +166,33 @@ class OdsClient:
         return ExportStream(response=response, rows=rows)
 
 
+class _GzipResponse(gzip.GzipFile):
+    """A gzip-encoded HTTP response, decompressed as it is read; closing it closes the socket."""
+
+    def __init__(self, raw: IO[bytes]) -> None:
+        super().__init__(fileobj=raw, mode="rb")
+        self._raw = raw
+
+    def close(self) -> None:
+        try:
+            super().close()
+        finally:
+            self._raw.close()
+
+
+def _decoded(response: IO[bytes]) -> IO[bytes]:
+    """Undo ``Content-Encoding: gzip``.
+
+    urllib never asks for compression, but some portals (opendata.paris.fr) gzip
+    every response anyway, and urllib hands the compressed bytes through as-is.
+    """
+    headers = getattr(response, "headers", None)
+    encoding = (headers.get("Content-Encoding") if headers else None) or ""
+    if encoding.strip().lower() in ("gzip", "x-gzip"):
+        return cast("IO[bytes]", _GzipResponse(response))
+    return response
+
+
 def _strip_query(url: str) -> str:
     return url.split("?", 1)[0]
 
@@ -182,7 +210,10 @@ def _describe_http_error(url: str, err: urllib.error.HTTPError) -> str:
     """Return a readable error: HTTP status plus the portal's ``error_code``/``message`` when present."""
     body = b""
     with contextlib.suppress(Exception):
-        body = err.read(2000)
+        body = err.read()
+        if (err.headers.get("Content-Encoding") or "").strip().lower() in ("gzip", "x-gzip"):
+            body = gzip.decompress(body)
+        body = body[:2000]
     detail = body.decode(errors="replace").strip()
     try:
         parsed = json.loads(detail)

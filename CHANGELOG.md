@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1
+
+- Fix: every query whose filter is pushed down to the worker (a `WHERE` clause, or
+  `ORDER BY … LIMIT`) failed with "No DuckDB-compatible engine is installed". The SDK binds
+  and evaluates pushed predicates with a local engine, which was only in the dev
+  dependency group; the runtime dependency is now `vgi-python[http,haybarn]`.
+- Fix: portals that gzip their responses without being asked (opendata.paris.fr) failed with
+  `UnicodeDecodeError`; gzip responses are now decompressed.
+
+## 0.1.0
 
 First release: any Opendatasoft (Huwise) portal as SQL through the Explore API v2.1.
 

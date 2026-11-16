@@ -133,7 +133,7 @@ Python 3.13+ and [uv](https://docs.astral.sh/uv/). Run the worker straight from 
 INSTALL vgi FROM community;
 LOAD vgi;
 ATTACH 'opendatasoft' (TYPE vgi,
-  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-opendatasoft@v0.1.0 vgi-opendatasoft-worker');
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-opendatasoft@v0.1.1 vgi-opendatasoft-worker');
 ```
 
 From a checkout: `make build`, then `LOCATION '/abs/path/to/vgi-opendatasoft/.venv/bin/vgi-opendatasoft-worker'`.
