@@ -129,11 +129,13 @@ groups; otherwise up to 10,000 rows are paged.
 Python 3.14+ and [uv](https://docs.astral.sh/uv/). Run the worker straight from a release tag
 (workers are not published to PyPI):
 
+vgi-opendatasoft 0.2.0 speaks VGI protocol 3.4, so it needs Haybarn 2.0.1 or newer (Haybarn 2.0.0 loads a 3.3 `vgi` extension that cannot attach it).
+
 ```sql
 INSTALL vgi FROM community;
 LOAD vgi;
 ATTACH 'opendatasoft' (TYPE vgi,
-  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-opendatasoft@v0.1.2 vgi-opendatasoft-worker');
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-opendatasoft@v0.2.0 vgi-opendatasoft-worker');
 ```
 
 From a checkout: `make build`, then `LOCATION '/abs/path/to/vgi-opendatasoft/.venv/bin/vgi-opendatasoft-worker'`.
